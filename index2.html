@@ -1,0 +1,512 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red202\green202\blue202;}
+{\*\expandedcolortbl;;\cssrgb\c83137\c83137\c83137;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs28 \cf2 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 <!DOCTYPE html>\
+<html lang="it">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>Sondaggio su Luca</title>\
+    <script src="https://cdn.tailwindcss.com"></script>\
+    <style>\
+        /* Custom styles if needed, though Tailwind should cover most */\
+        body \{\
+            font-family: 'Inter', sans-serif; /* Using Inter as a common, clean font */\
+            /* Background con scritta "LUCA NEGRO" */\
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='350' height='250'%3E%3Ctext x='50' y='100' font-family='Inter, sans-serif' font-size='35' fill='rgba(0,0,0,0.07)' transform='rotate(-30, 50, 100)'%3ELUCA%3C/text%3E%3C/svg%3E");\
+            background-repeat: repeat;\
+        \}\
+        .form-matrix-table \{ /* Kept for potential future use, not used by current questions */\
+            display: grid;\
+            grid-template-columns: repeat(var(--cols, 5), auto);\
+            gap: 0.5rem;\
+            align-items: center;\
+        \}\
+        .form-matrix-header \{\
+            font-weight: 600;\
+            text-align: center;\
+            padding: 0.5rem;\
+            font-size: 0.875rem; /* text-sm */\
+        \}\
+        .form-matrix-row-label \{\
+            font-weight: 500;\
+            padding-right: 1rem;\
+            text-align: left;\
+            font-size: 0.875rem; /* text-sm */\
+        \}\
+        .form-matrix-cell \{\
+            text-align: center;\
+        \}\
+        .validation-error \{\
+            color: #e53e3e; /* Tailwind red-600 */\
+            font-size: 0.75rem; /* text-xs */\
+            margin-top: 0.25rem;\
+        \}\
+        input[type="radio"], input[type="checkbox"] \{\
+            width: 1.25rem; /* w-5 */\
+            height: 1.25rem; /* h-5 */\
+            cursor: pointer;\
+        \}\
+        label \{\
+            cursor: pointer;\
+        \}\
+        .scale-option \{\
+            display: flex;\
+            flex-direction: column;\
+            align-items: center;\
+            margin: 0 0.5rem;\
+        \}\
+        .scale-option input[type="radio"] \{\
+            margin-bottom: 0.25rem;\
+        \}\
+        .humorous-comment \{\
+            font-style: italic;\
+            color: #4a5568; /* Tailwind gray-700 */\
+            font-size: 0.875rem;\
+            margin-top: 0.25rem;\
+            margin-bottom: 0.5rem;\
+            text-align: center;\
+        \}\
+    </style>\
+</head>\
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col items-center justify-center py-8 px-4">\
+\
+    <div class="w-full max-w-2xl bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-2xl">\
+        <div class="flex justify-between items-center mb-4">\
+            <h1 id="surveyTitle" class="text-xl sm:text-2xl font-bold text-red-700 text-center w-full"></h1>\
+        </div>\
+        <div class="flex justify-center mb-6 space-x-2">\
+            <button id="langItButton" class="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition text-sm">Italiano</button>\
+            <button id="langNeButton" class="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition text-sm">Napoletano</button>\
+        </div>\
+\
+        <p id="requiredNote" class="text-xs text-gray-600 mb-6 text-center"></p>\
+\
+        <form id="feedbackForm">\
+            <div id="questionsContainer" class="space-y-6">\
+                <!-- Questions will be dynamically inserted here by JavaScript -->\
+            </div>\
+\
+            <div id="formErrorMessage" class="mt-6 text-red-600 text-sm font-semibold hidden"></div>\
+\
+            <button type="submit" id="submitButton" class="mt-8 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-150 text-lg">\
+                Invia Risposte\
+            </button>\
+        </form>\
+\
+        <div id="confirmationMessage" class="hidden mt-8 p-6 bg-green-50 border-l-4 border-green-500 rounded-lg">\
+            <h2 id="confirmationTitle" class="text-xl font-semibold text-green-800 mb-2"></h2>\
+            <p id="confirmationText" class="text-green-700"></p>\
+        </div>\
+    </div>\
+\
+    <script>\
+        // --- Configuration and Data ---\
+        let currentLanguage = 'it'; // Default language\
+\
+        const surveyTexts = \{\
+            it: \{\
+                surveyTitle: "Benvenuto al sondaggio per scoprire quanto LUCA sia Ebreo",\
+                requiredNote: "* Indica una domanda obbligatoria (ma fai come ti pare, tanto Luca non si offende... forse)",\
+                submitButton: "Manda e Spera",\
+                confirmationTitle: "Fatto! Ora Luca sa cosa pensi.",\
+                confirmationText: "Grazie per aver partecipato! Le tue risposte sono state inviate nel vuoto cosmico (o forse solo alla console). Luca ti ringrazia... a modo suo.",\
+                formError: "Ehi, compila i campi obbligatori, dai!",\
+                errorRequired: "Questo campo vuole la sua attenzione!",\
+                yes: "S\'cc",\
+                no: "NO",\
+                q1_comment: "Sii onesto, eh! Non fare il timido.",\
+                q2_comment: "Un mistero da svelare... o forse no.",\
+                q3_comment: "La dissimulazione \'e8 un'arte, dicono.",\
+                q4_comment: "Dicci la tua, senza peli sulla lingua!"\
+            \},\
+            ne: \{ // Napoletano\
+                surveyTitle: "U\'e9, benvenut' \'f4 sondagg' pe' cap\'ec quant' LUCA ten' 'o sang' ggiudaic'",\
+                requiredNote: "* Chist' \'e8 obbligatori', ma fa' comm' te pare, tant' Luca nun se la piglia... forse",\
+                submitButton: "Manna Tutt' Ccos'",\
+                confirmationTitle: "Fatt'!",\
+                confirmationText: "Grazij assaj! 'E rispost' toje so' state mann\'e0te 'o creatore (o forse sul' int' 'a console). Luca te ringrazij... a mod' suj.",\
+                formError: "Guagli\'f2, arrempi\'e9nn' 'e camp' obbligatori, anema 'e core!",\
+                errorRequired: "Chistu camp' te vo' ben'!",\
+                yes: "S\'ccNE", // Colloquial yes\
+                no: "NO",\
+                q1_comment: "Dic' 'a verit\'e0, eh! Nun fa' 'o scem'.",\
+                q2_comment: "Nu mister' ca s'adda svel\'e0... o forse nisciun mister'.",\
+                q3_comment: "L'arte 'e nasconnere 'e ccose \'e8 na cosa seria, dicene.",\
+                q4_comment: "Dicce chello ca pienz', senza sparagn\'e0 parole!"\
+            \}\
+        \};\
+\
+        const surveyQuestions = [\
+            \{\
+                id: 'q1',\
+                label: \{ \
+                    it: "Partiamo con il botto! Quanto secondo te Luca \'e8 ebreo da 1 a 5?",\
+                    ne: "Accuminciamm' fort'! Pe' te, quant'\'e8 ebbr\'e8o Luca, 'a 1 a 5?" \
+                \},\
+                type: 'scale',\
+                required: true,\
+                options: [\
+                    \{ value: '1', label: \{ it: "1 (Poco)", ne: "1 (Na miseria)" \} \},\
+                    \{ value: '2', label: \{ it: "2", ne: "2" \} \},\
+                    \{ value: '3', label: \{ it: "3 (Cos\'ec cos\'ec)", ne: "3 (Accuss\'ec e accuss\'ec)" \} \},\
+                    \{ value: '4', label: \{ it: "4", ne: "4" \} \},\
+                    \{ value: '5', label: \{ it: "5 (Tantissimo!)", ne: "5 (Na cifra!)" \} \}\
+                ],\
+                comment_id: 'q1_comment'\
+            \},\
+            \{\
+                id: 'q2',\
+                label: \{ \
+                    it: "Credi sia anche una rara specie di ebreo albino?",\
+                    ne: "Pienz' ca \'e8 pure n'ebbr\'e8o albin', 'na specija rara?"\
+                \},\
+                type: 'radio',\
+                required: true,\
+                options: [\
+                    \{ value: 'si', key: 'yes' \},\
+                    \{ value: 'no', key: 'no' \}\
+                ],\
+                comment_id: 'q2_comment'\
+            \},\
+            \{\
+                id: 'q3',\
+                label: \{ \
+                    it: "Quanto da 1 a 5 fa finta di non essere Ebreo albino?",\
+                    ne: "Quant' fa 'o fint' 'e nun esser' ebbr\'e8o albin', 'a 1 a 5?"\
+                \},\
+                type: 'scale',\
+                required: true,\
+                options: [\
+                    \{ value: '1', label: \{ it: "1 (Per niente)", ne: "1 (Proprio pe' nient')" \} \},\
+                    \{ value: '2', label: \{ it: "2", ne: "2" \} \},\
+                    \{ value: '3', label: \{ it: "3 (Un po')", ne: "3 (Nu poco)" \} \},\
+                    \{ value: '4', label: \{ it: "4", ne: "4" \} \},\
+                    \{ value: '5', label: \{ it: "5 (Maestrissimo!)", ne: "5 (Nu maestro!)" \} \}\
+                ],\
+                comment_id: 'q3_comment'\
+            \},\
+            \{\
+                id: 'q4_text', // Separate ID for the text input part\
+                label: \{\
+                    it: "Abbiamo capito che Luca oltre ad essere Ebreo albino \'e8 pure ___?",\
+                    ne: "Amma capit' ca Luca, oltra a esser' ebbr\'e8o albin', \'e8 pure ___?"\
+                \},\
+                type: 'text_with_radio', // Custom type to handle text input before radio\
+                required: true, // The text part is required\
+                radio_id: 'q4_agreement',\
+                radio_label: \{\
+                    it: "Sei d'accordo?",\
+                    ne: "Si' d'accord'?"\
+                \},\
+                radio_options: [\
+                     \{ value: 'si', key: 'yes' \},\
+                     \{ value: 'no', key: 'no' \}\
+                ],\
+                comment_id: 'q4_comment'\
+            \}\
+        ];\
+\
+        // --- DOM Elements ---\
+        const surveyTitleEl = document.getElementById('surveyTitle');\
+        const requiredNoteEl = document.getElementById('requiredNote');\
+        const questionsContainer = document.getElementById('questionsContainer');\
+        const feedbackForm = document.getElementById('feedbackForm');\
+        const submitButton = document.getElementById('submitButton');\
+        const langItButton = document.getElementById('langItButton');\
+        const langNeButton = document.getElementById('langNeButton');\
+        const confirmationMessageEl = document.getElementById('confirmationMessage');\
+        const confirmationTitleEl = document.getElementById('confirmationTitle');\
+        const confirmationTextEl = document.getElementById('confirmationText');\
+        const formErrorMessageEl = document.getElementById('formErrorMessage');\
+\
+        // --- Functions ---\
+\
+        function renderSurvey() \{\
+            const texts = surveyTexts[currentLanguage];\
+            document.documentElement.lang = currentLanguage;\
+\
+            surveyTitleEl.textContent = texts.surveyTitle;\
+            requiredNoteEl.textContent = texts.requiredNote;\
+            submitButton.textContent = texts.submitButton;\
+            confirmationTitleEl.textContent = texts.confirmationTitle;\
+            confirmationTextEl.textContent = texts.confirmationText;\
+            \
+            // Update language button styles\
+            langItButton.classList.toggle('bg-gray-400', currentLanguage !== 'it');\
+            langItButton.classList.toggle('hover:bg-gray-500', currentLanguage !== 'it');\
+            langItButton.classList.toggle('bg-blue-500', currentLanguage === 'it');\
+            langItButton.classList.toggle('hover:bg-blue-600', currentLanguage === 'it');\
+\
+            langNeButton.classList.toggle('bg-gray-400', currentLanguage !== 'ne');\
+            langNeButton.classList.toggle('hover:bg-gray-500', currentLanguage !== 'ne');\
+            langNeButton.classList.toggle('bg-green-500', currentLanguage === 'ne');\
+            langNeButton.classList.toggle('hover:bg-green-600', currentLanguage === 'ne');\
+\
+\
+            questionsContainer.innerHTML = ''; // Clear previous questions\
+\
+            surveyQuestions.forEach(q => \{\
+                const questionDiv = document.createElement('div');\
+                questionDiv.className = 'p-4 border border-gray-300 rounded-lg shadow-md bg-white';\
+                questionDiv.setAttribute('id', `question-block-$\{q.id\}`);\
+\
+                const label = document.createElement('label');\
+                label.htmlFor = q.id;\
+                label.className = 'block text-md font-medium mb-2 text-gray-800';\
+                label.textContent = q.label[currentLanguage] + (q.required ? ' *' : '');\
+                \
+                if (q.comment_id && texts[q.comment_id]) \{\
+                    const commentP = document.createElement('p');\
+                    commentP.className = 'humorous-comment';\
+                    commentP.textContent = texts[q.comment_id];\
+                    questionDiv.appendChild(commentP);\
+                \}\
+                \
+                questionDiv.appendChild(label);\
+\
+\
+                const inputErrorDiv = document.createElement('div');\
+                inputErrorDiv.className = 'validation-error';\
+                inputErrorDiv.setAttribute('id', `error-$\{q.id || q.radio_id\}`); // Use radio_id for text_with_radio error\
+\
+                switch (q.type) \{\
+                    case 'text':\
+                        const textInput = document.createElement('input');\
+                        textInput.type = 'text';\
+                        textInput.id = q.id;\
+                        textInput.name = q.id;\
+                        textInput.className = 'mt-1 block w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500';\
+                        questionDiv.appendChild(textInput);\
+                        break;\
+                    case 'scale':\
+                        const scaleContainer = document.createElement('div');\
+                        scaleContainer.className = 'flex justify-around mt-2 flex-wrap';\
+                        q.options.forEach(opt => \{\
+                            const scaleOptionDiv = document.createElement('div');\
+                            scaleOptionDiv.className = 'scale-option p-2 border border-gray-200 rounded-md hover:bg-red-50 transition-colors';\
+                            \
+                            const radioInput = document.createElement('input');\
+                            radioInput.type = 'radio';\
+                            radioInput.id = `$\{q.id\}_$\{opt.value\}`;\
+                            radioInput.name = q.id;\
+                            radioInput.value = opt.value;\
+                            radioInput.className = 'text-red-600 focus:ring-red-500';\
+                            \
+                            const radioLabel = document.createElement('label');\
+                            radioLabel.htmlFor = `$\{q.id\}_$\{opt.value\}`;\
+                            radioLabel.textContent = opt.label[currentLanguage];\
+                            radioLabel.className = 'text-xs sm:text-sm text-gray-700';\
+\
+                            scaleOptionDiv.appendChild(radioInput);\
+                            scaleOptionDiv.appendChild(radioLabel);\
+                            scaleContainer.appendChild(scaleOptionDiv);\
+                        \});\
+                        questionDiv.appendChild(scaleContainer);\
+                        break;\
+                    case 'radio':\
+                        const radioGroupDiv = document.createElement('div');\
+                        radioGroupDiv.className = 'mt-2 space-y-1 sm:space-y-0 sm:flex sm:space-x-4 justify-center';\
+                        q.options.forEach(opt => \{\
+                            const optionDiv = document.createElement('div');\
+                            optionDiv.className = 'flex items-center p-2 border border-gray-200 rounded-md hover:bg-red-50 transition-colors min-w-[80px] justify-center';\
+                            const radioInput = document.createElement('input');\
+                            radioInput.type = 'radio';\
+                            radioInput.id = `$\{q.id\}_$\{opt.value\}`;\
+                            radioInput.name = q.id;\
+                            radioInput.value = opt.value;\
+                            radioInput.className = 'mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300';\
+                            \
+                            const radioLabel = document.createElement('label');\
+                            radioLabel.htmlFor = `$\{q.id\}_$\{opt.value\}`;\
+                            radioLabel.textContent = texts[opt.key]; // Use key to get "YES"/"NO" from texts\
+                            radioLabel.className = 'text-sm text-gray-700';\
+\
+                            optionDiv.appendChild(radioInput);\
+                            optionDiv.appendChild(radioLabel);\
+                            radioGroupDiv.appendChild(optionDiv);\
+                        \});\
+                        questionDiv.appendChild(radioGroupDiv);\
+                        break;\
+                     case 'text_with_radio':\
+                        // Text input part\
+                        const customTextInput = document.createElement('input');\
+                        customTextInput.type = 'text';\
+                        customTextInput.id = q.id; // e.g., q4_text\
+                        customTextInput.name = q.id;\
+                        customTextInput.placeholder = "Scrivi qui..."\
+                        customTextInput.className = 'mt-1 block w-full px-3 py-2 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 mb-3';\
+                        questionDiv.appendChild(customTextInput);\
+                        \
+                        // Radio part label\
+                        const radioPartLabel = document.createElement('label');\
+                        radioPartLabel.className = 'block text-sm font-medium text-gray-700 mt-3 mb-1';\
+                        radioPartLabel.textContent = q.radio_label[currentLanguage];\
+                        questionDiv.appendChild(radioPartLabel);\
+\
+                        // Radio buttons\
+                        const customRadioGroupDiv = document.createElement('div');\
+                        customRadioGroupDiv.className = 'mt-1 space-y-1 sm:space-y-0 sm:flex sm:space-x-4 justify-center';\
+                        q.radio_options.forEach(opt => \{\
+                            const optionDiv = document.createElement('div');\
+                            optionDiv.className = 'flex items-center p-2 border border-gray-200 rounded-md hover:bg-red-50 transition-colors min-w-[80px] justify-center';\
+                            const radioInput = document.createElement('input');\
+                            radioInput.type = 'radio';\
+                            radioInput.id = `$\{q.radio_id\}_$\{opt.value\}`;\
+                            radioInput.name = q.radio_id; // e.g., q4_agreement\
+                            radioInput.value = opt.value;\
+                            radioInput.className = 'mr-2 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300';\
+                            \
+                            const radioLabel = document.createElement('label');\
+                            radioLabel.htmlFor = `$\{q.radio_id\}_$\{opt.value\}`;\
+                            radioLabel.textContent = texts[opt.key];\
+                            radioLabel.className = 'text-sm text-gray-700';\
+\
+                            optionDiv.appendChild(radioInput);\
+                            optionDiv.appendChild(radioLabel);\
+                            customRadioGroupDiv.appendChild(optionDiv);\
+                        \});\
+                        questionDiv.appendChild(customRadioGroupDiv);\
+                        // Error div for the radio part of text_with_radio\
+                        const radioErrorDiv = document.createElement('div');\
+                        radioErrorDiv.className = 'validation-error';\
+                        radioErrorDiv.setAttribute('id', `error-$\{q.radio_id\}`);\
+                        questionDiv.appendChild(radioErrorDiv);\
+                        break;\
+                \}\
+                // Add general error div for non-matrix questions (or text part of text_with_radio)\
+                if (q.type !== 'text_with_radio') \{ // Error for radio part of text_with_radio is handled above\
+                    questionDiv.appendChild(inputErrorDiv);\
+                \} else \{\
+                     // For text_with_radio, the main inputErrorDiv is for the text part\
+                    const textErrorDiv = document.createElement('div');\
+                    textErrorDiv.className = 'validation-error';\
+                    textErrorDiv.setAttribute('id', `error-$\{q.id\}`);\
+                    // Insert text error div before the radio part label\
+                    const radioPartLabelEl = questionDiv.querySelector(`label[class*="block text-sm font-medium text-gray-700 mt-3 mb-1"]`);\
+                    if (radioPartLabelEl) \{\
+                        questionDiv.insertBefore(textErrorDiv, radioPartLabelEl);\
+                    \} else \{\
+                        questionDiv.appendChild(textErrorDiv);\
+                    \}\
+                \}\
+                questionsContainer.appendChild(questionDiv);\
+            \});\
+        \}\
+\
+        function setLanguage(lang) \{\
+            currentLanguage = lang;\
+            clearAllValidationErrors(); \
+            formErrorMessageEl.classList.add('hidden');\
+            renderSurvey();\
+        \}\
+\
+        function clearAllValidationErrors() \{\
+            document.querySelectorAll('.validation-error').forEach(el => \{\
+                el.textContent = '';\
+                el.classList.add('hidden');\
+            \});\
+            document.querySelectorAll('.border-red-500').forEach(el => \{\
+                el.classList.remove('border-red-500', 'border-2');\
+            \});\
+            formErrorMessageEl.classList.add('hidden');\
+            formErrorMessageEl.textContent = '';\
+        \}\
+\
+        function showValidationError(questionId, message) \{\
+            const errorDiv = document.getElementById(`error-$\{questionId\}`);\
+            if (errorDiv) \{\
+                errorDiv.textContent = message;\
+                errorDiv.classList.remove('hidden');\
+            \}\
+            \
+            const elementToHighlight = document.getElementById(questionId) || document.querySelector(`[name="$\{questionId\}"]`);\
+            if (elementToHighlight) \{\
+                if (elementToHighlight.type === 'radio' || elementToHighlight.type === 'checkbox') \{\
+                    // For radio/checkbox groups, highlight the container or first element\
+                    const parentBlock = elementToHighlight.closest('.p-4');\
+                    if (parentBlock) parentBlock.classList.add('border-red-500', 'border-2');\
+                \} else \{\
+                     elementToHighlight.classList.add('border-red-500', 'border-2');\
+                \}\
+            \}\
+        \}\
+\
+        function handleSubmit(event) \{\
+            event.preventDefault();\
+            clearAllValidationErrors();\
+            let isValid = true;\
+            const formData = \{\};\
+            const texts = surveyTexts[currentLanguage];\
+\
+            surveyQuestions.forEach(q => \{\
+                if (q.type === 'text_with_radio') \{\
+                    // Validate text part\
+                    const textInputElement = document.getElementById(q.id);\
+                    if (q.required && !textInputElement.value.trim()) \{\
+                        isValid = false;\
+                        showValidationError(q.id, texts.errorRequired);\
+                    \}\
+                    formData[q.id] = textInputElement.value.trim();\
+                    \
+                    // Validate radio part\
+                    const radioSelected = document.querySelector(`input[name="$\{q.radio_id\}"]:checked`);\
+                    if (!radioSelected) \{ // Assuming radio part is always required if text_with_radio is used\
+                        isValid = false;\
+                        showValidationError(q.radio_id, texts.errorRequired);\
+                    \}\
+                    formData[q.radio_id] = radioSelected ? radioSelected.value : null;\
+\
+                \} else \{ // For 'text', 'scale', 'radio'\
+                    const inputElement = document.getElementById(q.id);\
+                    const radioSelected = document.querySelector(`input[name="$\{q.id\}"]:checked`);\
+\
+                    if (q.type === 'radio' || q.type === 'scale') \{\
+                        if (q.required && !radioSelected) \{\
+                            isValid = false;\
+                            showValidationError(q.id, texts.errorRequired);\
+                        \}\
+                        formData[q.id] = radioSelected ? radioSelected.value : null;\
+                    \} else \{ // text\
+                        if (q.required && !inputElement.value.trim()) \{\
+                            isValid = false;\
+                            showValidationError(q.id, texts.errorRequired);\
+                        \}\
+                        formData[q.id] = inputElement.value.trim();\
+                    \}\
+                \}\
+            \});\
+\
+            if (!isValid) \{\
+                formErrorMessageEl.textContent = texts.formError;\
+                formErrorMessageEl.classList.remove('hidden');\
+                const firstError = document.querySelector('.border-red-500, .validation-error:not(.hidden)');\
+                if (firstError) \{\
+                    firstError.scrollIntoView(\{ behavior: 'smooth', block: 'center' \});\
+                \}\
+                return;\
+            \}\
+\
+            console.log("Survey Data Submitted:", formData);\
+            feedbackForm.classList.add('hidden');\
+            confirmationMessageEl.classList.remove('hidden');\
+            confirmationMessageEl.scrollIntoView(\{ behavior: 'smooth', block: 'center' \});\
+        \}\
+\
+        // --- Event Listeners ---\
+        langItButton.addEventListener('click', () => setLanguage('it'));\
+        langNeButton.addEventListener('click', () => setLanguage('ne'));\
+        feedbackForm.addEventListener('submit', handleSubmit);\
+\
+        // --- Initial Render ---\
+        renderSurvey();\
+    </script>\
+</body>\
+</html>\
+}
